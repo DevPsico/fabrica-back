@@ -1,16 +1,28 @@
 package com.estacionamento.estacionamento.dtos;
 
-import java.math.BigDecimal;
+import com.estacionamento.estacionamento.models.ParkingSpot;
 import com.estacionamento.estacionamento.models.VacancyStatus;
+import com.estacionamento.estacionamento.models.VacancyType;
 import lombok.Data;
 
 
 @Data
 public class ParkingSpotDTO {
-	
-	private String numero;
-    private String tipo;
-    private BigDecimal valorPorHora;
-    private VacancyStatus status;
+
+    private Long id;
+    private String numero;
+    private VacancyType tipo;
+    private VacancyStatus status = VacancyStatus.DISPONIVEL;
+
+    // Construtores
+    public ParkingSpotDTO() {
+    }
+
+    public ParkingSpotDTO(ParkingSpot parkingSpot) {
+        this.id = parkingSpot.getId();
+        this.numero = parkingSpot.getNumero();
+        this.tipo = parkingSpot.getTipo();
+        this.status = parkingSpot.getStatus();
+    }
 
 }

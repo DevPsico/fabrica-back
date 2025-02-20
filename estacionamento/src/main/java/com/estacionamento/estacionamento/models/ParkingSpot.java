@@ -1,5 +1,7 @@
 package com.estacionamento.estacionamento.models;
 
+import com.estacionamento.estacionamento.dtos.ParkingSpotDTO;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -26,7 +28,7 @@ public class ParkingSpot {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private VacancyStatus status  = VacancyStatus.DISPONIVEL;;
+	private VacancyStatus status  = VacancyStatus.DISPONIVEL;
 
 	// Construtores
 	public ParkingSpot() {
@@ -41,5 +43,12 @@ public class ParkingSpot {
 	// Método para verificar se a vaga está disponível
     public boolean isDisponivel() {
         return this.status == VacancyStatus.DISPONIVEL;
+    }
+    
+    public ParkingSpot(ParkingSpotDTO parkingSpotDTO) {
+        this.id = parkingSpotDTO.getId();
+        this.numero = parkingSpotDTO.getNumero();
+        this.tipo = parkingSpotDTO.getTipo();
+        this.status = parkingSpotDTO.getStatus();
     }
 }

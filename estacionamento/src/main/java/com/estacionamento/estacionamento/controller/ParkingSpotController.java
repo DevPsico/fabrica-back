@@ -1,7 +1,7 @@
 package com.estacionamento.estacionamento.controller;
 
 import java.util.List;
-
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import com.estacionamento.estacionamento.dtos.ParkingSpotDTO;
 import com.estacionamento.estacionamento.models.ParkingSpot;
 import com.estacionamento.estacionamento.services.ParkingSpotService;
 
@@ -24,44 +24,51 @@ public class ParkingSpotController {
 	 	@Autowired
 	    private ParkingSpotService parkingSpotService;
 
-	    @GetMapping
-	    public ResponseEntity<List<ParkingSpot>> getAll() {
-	        List<ParkingSpot> parkingSpots = parkingSpotService.findAll();
-	        return ResponseEntity.ok(parkingSpots); // Retorna a lista com status 200 OK
-	    }
+	 	@GetMapping
+		public ResponseEntity<List<ParkingSpotDTO>> getAll() {
+			List<ParkingSpot> parkingSpots = parkingSpotService.findAll();
+			List<ParkingSpotDTO> dtoList = parkingSpots.stream()
+				.map(ParkingSpotDTO::new)
+				.collect(Collectors.toList());
+			return ResponseEntity.ok(dtoList);
+		}
 
-	    @GetMapping("/{id}")
-	    public ResponseEntity<ParkingSpot> getById(@PathVariable Long id) {
-	        return parkingSpotService.findById(id)
-	            .map(vaga -> ResponseEntity.ok(vaga))
-	            .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-	    }
+		@GetMapping("/{id}")
+		public ResponseEntity<ParkingSpotDTO> getById(@PathVariable Long id) {
+			return parkingSpotService.findById(id)
+				.map(vaga -> ResponseEntity.ok(new ParkingSpotDTO(vaga)))
+				.orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+		}
 
-	    @PostMapping
-	    public ResponseEntity<ParkingSpot> create(@RequestBody ParkingSpot parking) {
-	        // Utiliza o tipo e o status da vaga para criar
-	        ParkingSpot vaga = parkingSpotService.criarVaga(parking.getTipo(), parking.getStatus());
-	        return ResponseEntity.status(HttpStatus.CREATED).body(vaga);
-	    }
+		@PostMapping
+		public ResponseEntity<ParkingSpotDTO> create(@RequestBody ParkingSpotDTO parkingSpotDTO) {
+			// Convert DTO to entity and create it
+		    System.out.println("Tipo: " + parkingSpotDTO.getTipo());
+		    System.out.println("Status: " + parkingSpotDTO.getStatus());
+			ParkingSpot vaga = parkingSpotService.criarVaga(parkingSpotDTO.getTipo(), parkingSpotDTO.getStatus());
+			return ResponseEntity.status(HttpStatus.CREATED).body(new ParkingSpotDTO(vaga));
+		}
 
-	    @DeleteMapping("/{id}")
-	    public ResponseEntity<String> delete(@PathVariable Long id) {
-	        try {
-	            parkingSpotService.deleteById(id);
-	            return ResponseEntity.ok("Vaga excluída com sucesso.");
-	        } catch (RuntimeException e) {
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-	        }
-	    }
+		@DeleteMapping("/{id}")
+		public ResponseEntity<String> delete(@PathVariable Long id) {
+			try {
+				parkingSpotService.deleteById(id);
+				return ResponseEntity.ok("Vaga excluída com sucesso.");
+			} catch (RuntimeException e) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+			}
+		}
 
-	    @PutMapping("/{id}")
-	    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody ParkingSpot vagaAtualizada) {
-	        try {
-	            ParkingSpot vaga = parkingSpotService.atualizarVaga(id, vagaAtualizada);
-	            return ResponseEntity.ok(vaga);
-	        } catch (RuntimeException e) {
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-	        }
-	    }
+		@PutMapping("/{id}")
+		public ResponseEntity<?> update(@PathVariable Long id, @RequestBody ParkingSpotDTO vagaAtualizadaDTO) {
+			try {
+				// Convert DTO to entity for update
+				ParkingSpot vagaAtualizada = new ParkingSpot(vagaAtualizadaDTO.getNumero(), vagaAtualizadaDTO.getTipo(), vagaAtualizadaDTO.getStatus());
+				ParkingSpot vaga = parkingSpotService.atualizarVaga(id, vagaAtualizada);
+				return ResponseEntity.ok(new ParkingSpotDTO(vaga));
+			} catch (RuntimeException e) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+			}
+		}
 
 }

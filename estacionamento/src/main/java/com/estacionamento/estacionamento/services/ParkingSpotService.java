@@ -2,10 +2,8 @@ package com.estacionamento.estacionamento.services;
 
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.estacionamento.estacionamento.models.ParkingSpot;
 import com.estacionamento.estacionamento.models.VacancyStatus;
 import com.estacionamento.estacionamento.models.VacancyType;

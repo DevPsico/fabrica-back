@@ -1,5 +1,7 @@
 package com.estacionamento.estacionamento.models;
 
+import java.math.BigDecimal;
+
 public enum VacancyType {
 
     COMUM("C", 10.0),
@@ -8,18 +10,18 @@ public enum VacancyType {
     IDOSO("I", 12.0);
 
     private final String prefixo;
-    private final double valorPorHora; // Novo atributo para armazenar o preço
+    private final BigDecimal valorPorHora; // Novo atributo para armazenar o preço
 
     VacancyType(String prefixo, double valorPorHora) {
         this.prefixo = prefixo;
-        this.valorPorHora = valorPorHora;
+        this.valorPorHora = BigDecimal.valueOf(valorPorHora);
     }
     
     public String getPrefixo() {
         return prefixo;
     }
 
-    public double getValorPorHora() {
+    public BigDecimal getValorPorHora() {
         return valorPorHora;
     }
 }

@@ -30,10 +30,15 @@ public class Customer {
     // Construtores, getters e setters
     public Customer() {
     }
-
-    public Customer(String nome) {
-        this.nome = nome;
-     
+   
+    public Customer (Long id) {
+    	this.id = id;
     }
 
+	public Customer( String nome) {
+	
+		
+		this.nome = nome;
+		
+	}
 }

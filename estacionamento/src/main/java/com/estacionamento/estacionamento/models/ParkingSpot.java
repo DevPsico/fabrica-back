@@ -33,6 +33,10 @@ public class ParkingSpot {
 	// Construtores
 	public ParkingSpot() {
 	}
+	
+	public ParkingSpot(Long id) {
+	    this.id = id;
+	}
 
 	public ParkingSpot(String numero, VacancyType tipo, VacancyStatus status) {
 		this.numero = numero;

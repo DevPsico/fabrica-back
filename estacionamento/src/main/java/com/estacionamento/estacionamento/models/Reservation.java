@@ -10,10 +10,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import lombok.Data;
 
 @Entity
-@Data
 public class Reservation {
 
 	@Id
@@ -68,4 +66,54 @@ public class Reservation {
     }
     */
 
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public ParkingSpot getParkingSpot() {
+		return parkingSpot;
+	}
+
+	public void setParkingSpot(ParkingSpot parkingSpot) {
+		this.parkingSpot = parkingSpot;
+	}
+
+	public Customer getCliente() {
+		return cliente;
+	}
+
+	public void setCliente(Customer cliente) {
+		this.cliente = cliente;
+	}
+
+	public LocalDateTime getDataInicio() {
+		return dataInicio;
+	}
+
+	public void setDataInicio(LocalDateTime dataInicio) {
+		this.dataInicio = dataInicio;
+	}
+
+	public LocalDateTime getDataFim() {
+		return dataFim;
+	}
+
+	public void setDataFim(LocalDateTime dataFim) {
+		this.dataFim = dataFim;
+	}
+
+	public BigDecimal getValorTotal() {
+		return valorTotal;
+	}
+
+	public void setValorTotal(BigDecimal valorTotal) {
+		this.valorTotal = valorTotal;
+	}
+
+    
+    
 }

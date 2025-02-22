@@ -3,6 +3,8 @@ package com.estacionamento.estacionamento.models;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -23,7 +25,8 @@ public class Reservation {
     private ParkingSpot parkingSpot;
 
     @ManyToOne
-    @JoinColumn(name = "cliente_id", nullable = false)
+    @JoinColumn(name = "cliente_id")
+    @JsonBackReference
     private Customer cliente;
 
     @Column(nullable = false)

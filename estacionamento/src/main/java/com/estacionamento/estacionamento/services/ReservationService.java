@@ -11,6 +11,11 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.estacionamento.estacionamento.exceptions.CustomerNotFoundException;
+import com.estacionamento.estacionamento.exceptions.NoReservationsFoundException;
+import com.estacionamento.estacionamento.exceptions.ParkingSpotNotAvailableException;
+import com.estacionamento.estacionamento.exceptions.ParkingSpotNotFoundException;
+import com.estacionamento.estacionamento.exceptions.ReservationNotFoundException;
 import com.estacionamento.estacionamento.models.Customer;
 import com.estacionamento.estacionamento.models.ParkingSpot;
 import com.estacionamento.estacionamento.models.Reservation;
@@ -32,33 +37,44 @@ public class ReservationService {
     private CustomerRepository customerRepository;
 
     // Criar nova reserva
-    public Reservation create(Long parkingSpotId, Long customerId, LocalDateTime dataInicio) {
-    	
-    	// Se dataInicio não for fornecida, usa o horário atual do computador
+    public Reservation create(Long parkingSpotId, Long customerId, LocalDateTime dataInicio) throws ParkingSpotNotAvailableException {
+        // Validação dos parâmetros de entrada
+        if (parkingSpotId == null) {
+            throw new IllegalArgumentException("O ID da vaga não pode ser nulo.");
+        }
+        if (customerId == null) {
+            throw new IllegalArgumentException("O ID do cliente não pode ser nulo.");
+        }
+
+        // Se dataInicio não for fornecida, usa o horário atual do computador
         if (dataInicio == null) {
-        	dataInicio = ZonedDateTime.now(ZoneId.systemDefault()).toLocalDateTime();
+            dataInicio = ZonedDateTime.now(ZoneId.systemDefault()).toLocalDateTime();
         }
+
+        // Busca a vaga de estacionamento
         ParkingSpot parkingSpot = parkingSpotRepository.findById(parkingSpotId)
-                .orElseThrow(() -> new RuntimeException("Vaga não encontrada!"));
+                .orElseThrow(() -> new ParkingSpotNotFoundException("Vaga não encontrada com o ID: " + parkingSpotId));
 
+        // Verifica se a vaga está disponível
         if (!parkingSpot.isDisponivel()) {
-            throw new IllegalStateException("A vaga não está disponível para reserva.");
+            throw new ParkingSpotNotAvailableException("A vaga não está disponível para reserva.");
         }
 
+        // Busca o cliente
         Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado!"));
+                .orElseThrow(() -> new CustomerNotFoundException("Cliente não encontrado com o ID: " + customerId));
 
+        // Cria a reserva
         Reservation reservation = new Reservation();
         reservation.setParkingSpot(parkingSpot);
         reservation.setCliente(customer);
         reservation.setDataInicio(dataInicio);
 
-        // Reserva a vaga
+        // Reserva a vaga (atualiza o status)
         parkingSpot.setStatus(VacancyStatus.RESERVADA);
-        
-        // Salvando a vaga com o novo status
-        parkingSpotRepository.save(parkingSpot);
 
+        // Salvando a vaga com o novo status e a reserva
+        parkingSpotRepository.save(parkingSpot);
         return reservationRepository.save(reservation);
     }
 
@@ -94,11 +110,15 @@ public class ReservationService {
 
     // Buscar todas as reservas
     public List<Reservation> findAll() {
-        return reservationRepository.findAll();
+        List<Reservation> reservations = reservationRepository.findAll();
+        if (reservations.isEmpty()) {
+            throw new NoReservationsFoundException("Nenhuma reserva encontrada.");
+        }
+        return reservations;
     }
-
     // Buscar reserva por ID
-    public Optional<Reservation> findById(Long id) {
-        return reservationRepository.findById(id);  // Agora retorna Optional
+    public Reservation findById(Long id) {
+        return reservationRepository.findById(id)
+                .orElseThrow(() -> new ReservationNotFoundException("Reserva não encontrada com o ID: " + id));
     }
 }

@@ -1,48 +1,72 @@
 package com.estacionamento.estacionamento.services;
 
+import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.estacionamento.estacionamento.exceptions.ClientHasActiveReservationsException;
+import com.estacionamento.estacionamento.exceptions.NoCustomersFoundException;
+import com.estacionamento.estacionamento.exceptions.ObjectNotFoundException;
 import com.estacionamento.estacionamento.models.Customer;
 import com.estacionamento.estacionamento.repository.CustomerRepository;
+import com.estacionamento.estacionamento.repository.ReservationRepository;
 
 @Service
 public class CustomerService {
 
-    @Autowired
-    private CustomerRepository customerRepository;
+	@Autowired
+	private CustomerRepository customerRepository;
 
-    // Salvar um novo cliente
-    public Customer save(Customer customer) {
-    	Customer clienteSalvo = customerRepository.save(customer);
-        System.out.println("Cliente salvo com ID: " + clienteSalvo.getId()); // Depuração
-        return clienteSalvo; // Retorna o cliente já persistido com ID
-    }
+	@Autowired
+	private ReservationRepository reservationRepository;
 
-    // Buscar cliente por ID
-    public Customer findById(Long id) {
-        return customerRepository.findById(id).orElseThrow(() -> new RuntimeException("Cliente não encontrado!"));
-    }
+	// Salvar um novo cliente
+	public Customer save(Customer customer) {
+		return customerRepository.save(customer);
+	}
 
-    // Atualizar cliente
-    public Customer update(Long id, Customer customerDetails) {
-        Customer existingCustomer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado!"));
+	// Buscar cliente por ID
+	public Customer findById(Long id) {
+	    Optional<Customer> customer = customerRepository.findById(id);
+	    return customer.orElseThrow(() -> new ObjectNotFoundException("Cliente não encontrado com o ID: " + id));
+	}
+	// Atualizar cliente
+	public Customer update(Long id, Customer customerDetails) {
+	    // Verifica se o cliente existe, senão lança exceção 404
+	    Customer existingCustomer = customerRepository.findById(id)
+	            .orElseThrow(() -> new ObjectNotFoundException("Cliente não encontrado com o ID: " + id));
 
-        existingCustomer.setNome(customerDetails.getNome());
+	    // Valida se o nome foi informado
+	    if (customerDetails.getNome() == null || customerDetails.getNome().trim().isEmpty()) {
+	        throw new IllegalArgumentException("O nome do cliente não pode estar vazio.");
+	    }
 
-        return customerRepository.save(existingCustomer);
-    }
+	    // Atualiza os dados do cliente
+	    existingCustomer.setNome(customerDetails.getNome());
 
-    // Deletar cliente por ID
-    public void delete(Long id) {
-        Customer existingCustomer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado!"));
+	    return customerRepository.save(existingCustomer);
+	}
 
-        customerRepository.delete(existingCustomer);
-    }
+	public void delete(Long id) {
+	    Customer existingCustomer = customerRepository.findById(id)
+	        .orElseThrow(() -> new ObjectNotFoundException("Cliente com ID " + id + " não encontrado."));
 
-    // Buscar todos os clientes
-    public Iterable<Customer> findAll() {
-        return customerRepository.findAll();
-    }
+	    boolean hasActiveReservations = reservationRepository.existsByClienteAndDataFimIsNull(existingCustomer);
+	    
+	    if (hasActiveReservations) {
+	        throw new ClientHasActiveReservationsException("Cliente possui reservas ativas e não pode ser excluído.");
+	    }
+
+	    customerRepository.delete(existingCustomer);
+	}
+
+	// Buscar todos os clientes
+	public List<Customer> findAll() {
+	    List<Customer> customers = customerRepository.findAll();
+	    if (customers.isEmpty()) {
+	        throw new NoCustomersFoundException("Nenhum cliente encontrado.");
+	    }
+	    return customers;
+	}
 }

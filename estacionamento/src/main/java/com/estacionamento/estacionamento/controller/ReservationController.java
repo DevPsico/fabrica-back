@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.estacionamento.estacionamento.dtos.ReservationDTO;
+import com.estacionamento.estacionamento.exceptions.ParkingSpotNotAvailableException;
 import com.estacionamento.estacionamento.models.Reservation;
 import com.estacionamento.estacionamento.services.ReservationService;
 
@@ -38,31 +39,40 @@ public class ReservationController {
 
 	 @GetMapping("/{id}")
 	 public ResponseEntity<ReservationDTO> getById(@PathVariable Long id) {
-	     Optional<Reservation> reservationOpt = reservationService.findById(id);
+	     // Busca a reserva pelo ID (se não existir, a exceção será lançada)
+	     Reservation reservation = reservationService.findById(id);
 
-	     if (reservationOpt.isPresent()) {
-	         // Se encontrar a reserva, retorna com o DTO
-	         Reservation reservation = reservationOpt.get();
-	         return ResponseEntity.ok(new ReservationDTO(reservation));
-	     } else {
-	         // Caso não encontre, retorna 404
-	         return ResponseEntity.notFound().build();
-	     }
+	     // Converte a reserva para DTO e retorna
+	     return ResponseEntity.ok(new ReservationDTO(reservation));
 	 }
 
 	 @PostMapping
-	 public ResponseEntity<ReservationDTO> create(@RequestBody ReservationDTO reservationDTO) {
-	     // Passando os parâmetros corretos para o método create
+	 public ResponseEntity<ReservationDTO> create(@RequestBody ReservationDTO reservationDTO) throws ParkingSpotNotAvailableException {
+	     // Validação do DTO
+	     if (reservationDTO == null) {
+	         throw new IllegalArgumentException("O corpo da requisição não pode ser nulo.");
+	     }
+	     if (reservationDTO.getParkingSpot() == null || reservationDTO.getCliente() == null) {
+	         throw new IllegalArgumentException("Os campos 'parkingSpot' e 'cliente' são obrigatórios.");
+	     }
+	     if (reservationDTO.getParkingSpot().getId() == null || reservationDTO.getCliente().getId() == null) {
+	         throw new IllegalArgumentException("Os IDs da vaga e do cliente são obrigatórios.");
+	     }
+
+	     // Extrai os dados do DTO
 	     Long parkingSpotId = reservationDTO.getParkingSpot().getId();
 	     Long customerId = reservationDTO.getCliente().getId();
 	     LocalDateTime dataInicio = reservationDTO.getDataInicio();
 
-	     // Criando a reserva
+	     // Cria a reserva
 	     Reservation savedReservation = reservationService.create(parkingSpotId, customerId, dataInicio);
 
-	     // Retornando a resposta com a reserva criada
-	     return ResponseEntity.status(HttpStatus.CREATED).body(new ReservationDTO(savedReservation));
-	 }  
+	     // Converte a reserva salva para DTO
+	     ReservationDTO responseDTO = new ReservationDTO(savedReservation);
+
+	     // Retorna a resposta com status 201 (Created) e o DTO no corpo
+	     return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+	 }
 	 
 	// Endpoint para finalizar uma reserva
 	    @PutMapping("/{id}")

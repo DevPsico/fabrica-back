@@ -38,10 +38,15 @@ public class Customer {
     	this.id = id;
     }
 
-	public Customer( String nome) {
+	public Customer(Long id, String nome) {
 	
+		this.id = id;
+		this.nome = nome;
 		
+	}public Customer( String nome) {
+	
 		this.nome = nome;
 		
 	}
+	
 }

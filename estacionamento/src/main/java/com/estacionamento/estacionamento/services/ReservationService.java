@@ -9,9 +9,11 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.estacionamento.estacionamento.exceptions.CustomerNotFoundException;
+import com.estacionamento.estacionamento.exceptions.InvalidDataFimException;
 import com.estacionamento.estacionamento.exceptions.NoReservationsFoundException;
 import com.estacionamento.estacionamento.exceptions.ParkingSpotNotAvailableException;
 import com.estacionamento.estacionamento.exceptions.ParkingSpotNotFoundException;
+import com.estacionamento.estacionamento.exceptions.ReservationAlreadyFinalizedException;
 import com.estacionamento.estacionamento.exceptions.ReservationNotFoundException;
 import com.estacionamento.estacionamento.models.Customer;
 import com.estacionamento.estacionamento.models.ParkingSpot;
@@ -75,13 +77,18 @@ public class ReservationService {
         return reservationRepository.save(reservation);
     }
 
-    // Finalizar reserva
+    //Finalizar reserva
     public Reservation finalizarReserva(Long id, LocalDateTime dataFim) {
         Reservation reservation = reservationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reserva não encontrada!"));
+                .orElseThrow(() -> new ReservationNotFoundException("Reserva não encontrada com o ID: " + id));
 
         if (reservation.getDataFim() != null) {
-            throw new IllegalStateException("A reserva já foi finalizada.");
+            throw new ReservationAlreadyFinalizedException("A reserva já foi finalizada.");
+        }
+
+        // Validação de dataFim
+        if (dataFim.isBefore(reservation.getDataInicio())) {
+            throw new InvalidDataFimException("A data de fim deve ser posterior à data de início.");
         }
 
         reservation.setDataFim(dataFim);
@@ -92,7 +99,7 @@ public class ReservationService {
 
         return reservationRepository.save(reservation);
     }
-
+    
     private BigDecimal calcularValorTotal(Reservation reservation) {
         // Calcula a diferença em horas, incluindo frações de hora
         long durationInMinutes = Duration.between(reservation.getDataInicio(), reservation.getDataFim()).toMinutes();

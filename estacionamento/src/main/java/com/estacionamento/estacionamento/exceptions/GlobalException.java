@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 
@@ -191,6 +192,18 @@ public class GlobalException {
 	        LocalDateTime.now(),
 	        HttpStatus.NOT_FOUND.value(),
 	        ex.getMessage(),
+	        request.getRequestURI()
+	    );
+	    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+	}
+	
+	@ExceptionHandler(NoHandlerFoundException.class)
+	public ResponseEntity<StandardErro> handleNoHandlerFoundException(NoHandlerFoundException ex, HttpServletRequest request) {
+	    String mensagem = "Endpoint não encontrado. Verifique o caminho da URL e tente novamente.";
+	    StandardErro error = new StandardErro(
+	        LocalDateTime.now(),
+	        HttpStatus.NOT_FOUND.value(),
+	        mensagem,
 	        request.getRequestURI()
 	    );
 	    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);

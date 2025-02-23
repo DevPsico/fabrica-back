@@ -127,6 +127,13 @@
 			<version>1.14.13</version> <!-- Use a versão mais recente -->
 		</dependency>
 
+		<!-- Jackson para JSON -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.12.3</version>
+		</dependency>
+
 		<plugin>
 			<groupId>org.jacoco</groupId>
 			<artifactId>jacoco-maven-plugin</artifactId>
@@ -165,7 +172,8 @@
 					<argLine>-XX:+EnableDynamicAgentLoading</argLine>
 				</configuration>
 			</plugin>
-	<!--  O JaCoCo é uma ferramenta que mede a cobertura de código em aplicativos Java -->
+			<!--  O JaCoCo é uma ferramenta que mede a cobertura de código em
+			aplicativos Java -->
 
 			<plugin>
 				<groupId>org.jacoco</groupId>

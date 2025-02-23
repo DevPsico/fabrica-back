@@ -76,9 +76,15 @@ public class ParkingSpotController {
 	        return ResponseEntity.ok(parkingSpotDTO);
 	    }
 
-	    // Endpoint para atualizar uma vaga de estacionamento existente
 	    @PutMapping("/{id}")
 	    public ResponseEntity<ParkingSpotDTO> update(@PathVariable Long id, @Valid @RequestBody ParkingSpotDTO parkingSpotDTO) {
+	        // Verifique se a vaga de estacionamento existe
+	        ParkingSpot existingParkingSpot = parkingSpotService.findById(id);
+	        if (existingParkingSpot == null) {
+	            // Se não existir, retorna um erro 404
+	            return ResponseEntity.notFound().build();
+	        }
+
 	        // Converte o DTO para a entidade ParkingSpot
 	        ParkingSpot parkingSpot = new ParkingSpot(parkingSpotDTO);
 

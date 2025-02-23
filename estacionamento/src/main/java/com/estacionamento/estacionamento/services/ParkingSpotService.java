@@ -37,29 +37,31 @@ public class ParkingSpotService {
 	}
 
 	public void deleteById(Long id) throws ParkingSpotNotAvailableException {
-		// Verifica se a vaga existe
-		ParkingSpot parkingSpot = parkingSpotRepository.findById(id)
-				.orElseThrow(() -> new ParkingSpotNotFoundException("Vaga não encontrada com o ID: " + id));
+	    // Verifica se a vaga existe
+	    ParkingSpot parkingSpot = parkingSpotRepository.findById(id)
+	        .orElseThrow(() -> new ParkingSpotNotFoundException("Vaga não encontrada com o ID: " + id));
 
-		// Verifica se a vaga está ocupada
-		if (parkingSpot.getStatus() == VacancyStatus.RESERVADA) {
-			throw new ParkingSpotNotAvailableException("Não é possível deletar a vaga, pois ela está ocupada.");
-		}
+	 // Verifica se a vaga está disponível
+	    if (parkingSpot.getStatus() != VacancyStatus.DISPONIVEL) {
+	        throw new ParkingSpotNotAvailableException("Não é possível deletar a vaga, pois ela não está disponível.");
+	    }
 
-		// Se a vaga não estiver ocupada, prossegue com a exclusão
-		parkingSpotRepository.deleteById(id);
+	    // Se a vaga não estiver ocupada, prossegue com a exclusão
+	    parkingSpotRepository.deleteById(id);
 	}
 
 	public ParkingSpot atualizarVaga(Long id, ParkingSpot parkingSpotDetails) {
 
-		ParkingSpot existingVaga = parkingSpotRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Vaga não encontrada"));
-		
-		 // Verifica se a vaga está disponível antes de permitir a atualização
-	    if (existingVaga.getStatus() != VacancyStatus.DISPONIVEL) { 
+	    // Verifica se a vaga existe, caso contrário, lança exceção
+	    ParkingSpot existingVaga = parkingSpotRepository.findById(id)
+	            .orElseThrow(() -> new RuntimeException("Vaga não encontrada"));
+
+	    // Verifica se a vaga está disponível antes de permitir a atualização
+	    if (existingVaga.getStatus() != VacancyStatus.DISPONIVEL) {
 	        throw new ParkingSpotNotFoundException("A vaga não está disponível e não pode ser atualizada.");
 	    }
 
+	    // Atualiza os dados da vaga com as informações fornecidas
 	    existingVaga.setTipo(parkingSpotDetails.getTipo());
 	    existingVaga.setStatus(parkingSpotDetails.getStatus());
 
@@ -67,6 +69,7 @@ public class ParkingSpotService {
 	    String novoNumero = gerarNumeroVaga(parkingSpotDetails.getTipo());
 	    existingVaga.setNumero(novoNumero);
 
+	    // Salva e retorna a vaga atualizada
 	    return parkingSpotRepository.save(existingVaga);
 	}
 

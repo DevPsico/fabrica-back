@@ -110,26 +110,37 @@ class ParkingSpotServiceTest {
     // Teste para deletar uma vaga por ID
     @Test
     void deleteById_ShouldDeleteParkingSpot() throws ParkingSpotNotAvailableException {
-        // Configuração do mock
-        when(parkingSpotRepository.existsById(1L)).thenReturn(true);
+        // ID da vaga de teste
+        Long id = 1L;
 
-        // Execução do método
-        parkingSpotService.deleteById(1L);
+        // Criando uma vaga simulada
+        ParkingSpot vaga = new ParkingSpot("A01", VacancyType.COMUM, VacancyStatus.DISPONIVEL);
 
-        // Verificações
-        verify(parkingSpotRepository, times(1)).deleteById(1L);
+        // Simulando que a vaga existe no banco
+        when(parkingSpotRepository.findById(id)).thenReturn(Optional.of(vaga));
+
+        // Chamando o método a ser testado
+        parkingSpotService.deleteById(id);
+
+        // Verificando se o delete foi chamado
+        verify(parkingSpotRepository, times(1)).deleteById(id);
     }
 
     // Teste para deletar uma vaga por ID inexistente
     @Test
     void deleteById_WhenParkingSpotNotFound_ShouldThrowException() {
-        // Configuração do mock
-        when(parkingSpotRepository.existsById(1L)).thenReturn(false);
-
-        // Execução e verificação da exceção
+        Long id = 1L;
+        
+        // Simulando que a vaga não existe
+        when(parkingSpotRepository.findById(id)).thenReturn(Optional.empty());
+        
+        // Verificando se a exceção é lançada quando a vaga não for encontrada
         assertThrows(ParkingSpotNotFoundException.class, () -> {
-            parkingSpotService.deleteById(1L);
+            parkingSpotService.deleteById(id);
         });
+
+        // Garantindo que nenhum outro método foi chamado, além do findById
+        verify(parkingSpotRepository, times(1)).findById(id);
     }
 
     // Teste para atualizar uma vaga

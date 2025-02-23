@@ -1,5 +1,8 @@
 package com.estacionamento.estacionamento.controller;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +15,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.estacionamento.estacionamento.dtos.ParkingSpotDTO;
+import com.estacionamento.estacionamento.exceptions.ParkingSpotNotAvailableException;
 import com.estacionamento.estacionamento.models.ParkingSpot;
+import com.estacionamento.estacionamento.models.VacancyStatus;
+import com.estacionamento.estacionamento.models.VacancyType;
 import com.estacionamento.estacionamento.services.ParkingSpotService;
 
 import jakarta.validation.Valid;
@@ -21,43 +28,77 @@ import jakarta.validation.Valid;
 @RequestMapping("/parking-spots")
 public class ParkingSpotController {
 
-	@Autowired
-	private ParkingSpotService parkingSpotService;
+	 @Autowired
+	    private ParkingSpotService parkingSpotService;
 
 	// Endpoint para criar uma nova vaga de estacionamento
-	@PostMapping
-	public ResponseEntity<ParkingSpot> create(@Valid @RequestBody ParkingSpot parkingSpot) {
-		ParkingSpot savedParkingSpot = parkingSpotService.criarVaga(parkingSpot.getTipo(), parkingSpot.getStatus());
-		return ResponseEntity.status(HttpStatus.CREATED).body(savedParkingSpot); // Retorna a vaga criada com status 201
-	}
+	    @PostMapping
+	    public ResponseEntity<ParkingSpotDTO> create(@Valid @RequestBody ParkingSpotDTO parkingSpotDTO) {
+	        // Extrai os dados do DTO
+	        VacancyType tipo = parkingSpotDTO.getTipo();
+	        VacancyStatus status = parkingSpotDTO.getStatus();
 
-	// Endpoint para buscar todas as vagas de estacionamento
-	@GetMapping
-	public ResponseEntity<Iterable<ParkingSpot>> getAll() {
-		Iterable<ParkingSpot> parkingSpots = parkingSpotService.findAll();
-		return ResponseEntity.ok(parkingSpots); // Retorna todas as vagas com status 200
-	}
+	        // Cria a vaga no banco de dados usando o método criarVaga do serviço
+	        ParkingSpot savedParkingSpot = parkingSpotService.criarVaga(tipo, status);
 
-	// Endpoint para buscar uma vaga por ID
-    @GetMapping("/{id}")
-    public ResponseEntity<ParkingSpot> getById(@PathVariable Long id) {
-        ParkingSpot parkingSpot = parkingSpotService.findById(id);
-        return ResponseEntity.ok(parkingSpot);
-    }
-	
+	        // Converte a entidade salva de volta para DTO
+	        ParkingSpotDTO responseDTO = new ParkingSpotDTO(savedParkingSpot);
 
-	// Endpoint para atualizar uma vaga de estacionamento existente
-	@PutMapping("/{id}")
-	public ResponseEntity<ParkingSpot> update(@PathVariable Long id, @RequestBody ParkingSpot parkingSpotDetails) {
-		ParkingSpot updatedParkingSpot = parkingSpotService.atualizarVaga(id, parkingSpotDetails);
-		return ResponseEntity.ok(updatedParkingSpot); // Retorna a vaga atualizada com status 200
-	}
+	        // Retorna o DTO com status 201 (CREATED)
+	        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+	    }
 
-	// Endpoint para deletar uma vaga de estacionamento por ID
-	@DeleteMapping("/{id}")
-	public ResponseEntity<Void> deleteById(@PathVariable Long id) {
-	    parkingSpotService.deleteById(id);
-	    return ResponseEntity.noContent().build(); // Retorna 204 (No Content)
-	}
+	    // Endpoint para buscar todas as vagas de estacionamento
+	    @GetMapping
+	    public ResponseEntity<List<ParkingSpotDTO>> getAll() {
+	        // Busca todas as vagas no banco de dados
+	        List<ParkingSpot> parkingSpots = parkingSpotService.findAll();
 
+	        // Converte a lista de entidades para uma lista de DTOs
+	        List<ParkingSpotDTO> parkingSpotDTOs = parkingSpots.stream()
+	                .map(ParkingSpotDTO::new)
+	                .collect(Collectors.toList());
+
+	        // Retorna a lista de DTOs com status 200 (OK)
+	        return ResponseEntity.ok(parkingSpotDTOs);
+	    }
+
+	    // Endpoint para buscar uma vaga por ID
+	    @GetMapping("/{id}")
+	    public ResponseEntity<ParkingSpotDTO> getById(@PathVariable Long id) {
+	        // Busca a vaga pelo ID
+	        ParkingSpot parkingSpot = parkingSpotService.findById(id);
+
+	        // Converte a entidade para DTO
+	        ParkingSpotDTO parkingSpotDTO = new ParkingSpotDTO(parkingSpot);
+
+	        // Retorna o DTO com status 200 (OK)
+	        return ResponseEntity.ok(parkingSpotDTO);
+	    }
+
+	    // Endpoint para atualizar uma vaga de estacionamento existente
+	    @PutMapping("/{id}")
+	    public ResponseEntity<ParkingSpotDTO> update(@PathVariable Long id, @Valid @RequestBody ParkingSpotDTO parkingSpotDTO) {
+	        // Converte o DTO para a entidade ParkingSpot
+	        ParkingSpot parkingSpot = new ParkingSpot(parkingSpotDTO);
+
+	        // Atualiza a vaga no banco de dados
+	        ParkingSpot updatedParkingSpot = parkingSpotService.atualizarVaga(id, parkingSpot);
+
+	        // Converte a entidade atualizada de volta para DTO
+	        ParkingSpotDTO responseDTO = new ParkingSpotDTO(updatedParkingSpot);
+
+	        // Retorna o DTO com status 200 (OK)
+	        return ResponseEntity.ok(responseDTO);
+	    }
+
+	    // Endpoint para deletar uma vaga de estacionamento por ID
+	    @DeleteMapping("/{id}")
+	    public ResponseEntity<Void> deleteById(@PathVariable Long id) throws ParkingSpotNotAvailableException {
+	        // Deleta a vaga pelo ID
+	        parkingSpotService.deleteById(id);
+
+	        // Retorna status 204 (NO_CONTENT) para indicar sucesso na exclusão
+	        return ResponseEntity.noContent().build();
+	    }
 }

@@ -6,10 +6,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.estacionamento.estacionamento.exceptions.CustomerNotFoundException;
 import com.estacionamento.estacionamento.exceptions.NoReservationsFoundException;
 import com.estacionamento.estacionamento.exceptions.ParkingSpotNotAvailableException;

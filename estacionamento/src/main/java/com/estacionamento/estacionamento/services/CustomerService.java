@@ -24,7 +24,10 @@ public class CustomerService {
 
 	// Salvar um novo cliente
 	public Customer save(Customer customer) {
-		return customerRepository.save(customer);
+		 if (customer.getNome() == null || customer.getNome().length() < 3 || customer.getNome().length() > 100) {
+		        throw new IllegalArgumentException("O nome deve ter entre 3 e 100 caracteres.");
+		    }
+		    return customerRepository.save(customer);
 	}
 
 	// Buscar cliente por ID

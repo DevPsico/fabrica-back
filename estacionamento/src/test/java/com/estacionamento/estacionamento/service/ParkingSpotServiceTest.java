@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import com.estacionamento.estacionamento.exceptions.ObjectNotFoundException;
+import com.estacionamento.estacionamento.exceptions.ParkingSpotNotAvailableException;
 import com.estacionamento.estacionamento.exceptions.ParkingSpotNotFoundException;
 import com.estacionamento.estacionamento.models.ParkingSpot;
 import com.estacionamento.estacionamento.models.VacancyStatus;
@@ -108,7 +109,7 @@ class ParkingSpotServiceTest {
 
     // Teste para deletar uma vaga por ID
     @Test
-    void deleteById_ShouldDeleteParkingSpot() {
+    void deleteById_ShouldDeleteParkingSpot() throws ParkingSpotNotAvailableException {
         // Configuração do mock
         when(parkingSpotRepository.existsById(1L)).thenReturn(true);
 

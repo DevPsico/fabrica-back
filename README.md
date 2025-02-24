@@ -2,6 +2,12 @@
 
 Este projeto é um sistema de gerenciamento de estacionamento que permite gerenciar vagas, reservas e clientes. O sistema oferece funcionalidades como a criação e a finalização de reservas, além da possibilidade de criar, atualizar e excluir vagas de estacionamento. O sistema também lida com a criação e manipulação de clientes, incluindo a verificação de reservas ativas para permitir ou não a exclusão de clientes.
 
+
+## Arquitetura do Projeto
+
+A arquitetura do projeto é baseada no padrão **Model-View-Controller (MVC)**, separando as responsabilidades da aplicação para uma melhor organização e escalabilidade.
+
+
 ## Tecnologias Utilizadas
 
 - **Backend**: Java 17

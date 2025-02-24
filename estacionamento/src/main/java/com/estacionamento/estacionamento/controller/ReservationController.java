@@ -25,6 +25,8 @@ import com.estacionamento.estacionamento.exceptions.ValidationError;
 import com.estacionamento.estacionamento.models.Reservation;
 import com.estacionamento.estacionamento.services.ReservationService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/reservations")
 public class ReservationController {
@@ -48,96 +50,68 @@ public class ReservationController {
 	}
 
 	@PostMapping
-	public ResponseEntity<ReservationDTO> create(@RequestBody ReservationDTO reservationDTO)
-			throws ParkingSpotNotAvailableException {
-		// Validação do DTO
-		if (reservationDTO == null) {
-			throw new IllegalArgumentException("O corpo da requisição não pode ser nulo.");
-		}
-		if (reservationDTO.getParkingSpot() == null || reservationDTO.getCliente() == null) {
-			throw new IllegalArgumentException("Os campos 'parkingSpot' e 'cliente' são obrigatórios.");
-		}
-		if (reservationDTO.getParkingSpot().getId() == null || reservationDTO.getCliente().getId() == null) {
-			throw new IllegalArgumentException("Os IDs da vaga e do cliente são obrigatórios.");
-		}
+	public ResponseEntity<ReservationDTO> create(@Valid @RequestBody ReservationDTO reservationDTO)
+	        throws ParkingSpotNotAvailableException {
+	    // Verifica se o parkingSpot é nulo
+	    if (reservationDTO.getParkingSpot() == null) {
+	        throw new IllegalArgumentException("O campo 'parkingSpot' não pode ser nulo.");
+	    }
 
-		// Extrai os dados do DTO
-		Long parkingSpotId = reservationDTO.getParkingSpot().getId();
-		Long customerId = reservationDTO.getCliente().getId();
-		LocalDateTime dataInicio = reservationDTO.getDataInicio();
+	    // Verifica se o cliente é nulo
+	    if (reservationDTO.getCliente() == null) {
+	        throw new IllegalArgumentException("O campo 'cliente' não pode ser nulo.");
+	    }
 
-		// Cria a reserva
-		Reservation savedReservation = reservationService.create(parkingSpotId, customerId, dataInicio);
+	    // Extrai os dados do DTO
+	    Long parkingSpotId = reservationDTO.getParkingSpot().getId();
+	    Long customerId = reservationDTO.getCliente().getId();
+	    LocalDateTime dataInicio = reservationDTO.getDataInicio();
 
-		// Converte a reserva salva para DTO
-		ReservationDTO responseDTO = new ReservationDTO(savedReservation);
+	    // Verifica se o ID do cliente é nulo
+	    if (customerId == null) {
+	        throw new IllegalArgumentException("O ID do cliente não pode ser nulo.");
+	    }
 
-		// Retorna a resposta com status 201 (Created) e o DTO no corpo
-		return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+	    // Cria a reserva
+	    Reservation savedReservation = reservationService.create(parkingSpotId, customerId, dataInicio);
+
+	    // Verifica se a reserva foi criada corretamente
+	    if (savedReservation == null) {
+	        throw new IllegalStateException("Falha ao criar a reserva.");
+	    }
+
+	    // Converte a reserva salva para DTO
+	    ReservationDTO responseDTO = new ReservationDTO(savedReservation);
+
+	    // Retorna a resposta com status 201 (Created) e o DTO no corpo
+	    return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<?> finalizarReserva(@PathVariable Long id, @RequestBody ReservationDTO reservationDTO) {
-	    // Validação do ID
-	    if (id <= 0) {
-	        ValidationError validationError = new ValidationError(
-	            LocalDateTime.now(), // Timestamp do erro
-	            HttpStatus.BAD_REQUEST.value(), // Código HTTP (400)
-	            "Erro de validação", // Mensagem geral
-	            "/reservations/" + id // Caminho da requisição
-	        );
-	        validationError.addErros("id", "O ID da reserva deve ser um valor positivo.");
-	        return ResponseEntity.badRequest().body(validationError);
-	    }
-
-	    LocalDateTime dataFim = reservationDTO.getDataFim();
-
-	    // Validação do campo dataFim
-	    if (dataFim == null) {
-	        ValidationError validationError = new ValidationError(
-	            LocalDateTime.now(), // Timestamp do erro
-	            HttpStatus.BAD_REQUEST.value(), // Código HTTP (400)
-	            "Erro de validação", // Mensagem geral
-	            "/reservations/" + id // Caminho da requisição
-	        );
-	        validationError.addErros("dataFim", "O campo 'dataFim' é obrigatório.");
-	        return ResponseEntity.badRequest().body(validationError);
-	    }
-
-	    // Validação para garantir que dataFim não seja igual a dataInicio
-	    if (dataFim.isEqual(reservationDTO.getDataInicio())) {
-	        ValidationError validationError = new ValidationError(
-	            LocalDateTime.now(), // Timestamp do erro
-	            HttpStatus.BAD_REQUEST.value(), // Código HTTP (400)
-	            "Erro de validação", // Mensagem geral
-	            "/reservations/" + id // Caminho da requisição
-	        );
-	        validationError.addErros("dataFim", "A data de fim não pode ser igual à data de início.");
-	        return ResponseEntity.badRequest().body(validationError);
-	    }
-
+	public ResponseEntity<?> finalizarReserva(@PathVariable Long id, @Valid @RequestBody ReservationDTO reservationDTO) {
 	    try {
+	        // Validação do ID
+	        if (id <= 0) {
+	            throw new IllegalArgumentException("O ID da reserva deve ser um valor positivo.");
+	        }
+
+	        LocalDateTime dataFim = reservationDTO.getDataFim();
+
+	        // Validação do campo dataFim
+	        if (dataFim == null) {
+	            throw new IllegalArgumentException("O campo 'dataFim' é obrigatório.");
+	        }
+
+	        // Validação para garantir que dataFim não seja igual a dataInicio
+	        if (dataFim.isEqual(reservationDTO.getDataInicio())) {
+	            throw new IllegalArgumentException("A data de fim não pode ser igual à data de início.");
+	        }
+
+	        // Finaliza a reserva
 	        Reservation updatedReservation = reservationService.finalizarReserva(id, dataFim);
 	        return ResponseEntity.ok(new ReservationDTO(updatedReservation)); // Retorna 200 com a reserva atualizada
-	    } catch (ReservationNotFoundException ex) {
-	        // Retorna 404 com uma mensagem de erro no corpo
-	        StandardErro errorResponse = new StandardErro(
-	            LocalDateTime.now(), // Timestamp do erro
-	            HttpStatus.NOT_FOUND.value(), // Código HTTP (404)
-	            ex.getMessage(), // Mensagem da exceção
-	            "/reservations/" + id // Caminho da requisição
-	        );
-	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-	    } catch (ReservationAlreadyFinalizedException ex) {
-	        // Retorna 400 com uma mensagem de erro no corpo
-	        StandardErro errorResponse = new StandardErro(
-	            LocalDateTime.now(), // Timestamp do erro
-	            HttpStatus.BAD_REQUEST.value(), // Código HTTP (400)
-	            ex.getMessage(), // Mensagem da exceção
-	            "/reservations/" + id // Caminho da requisição
-	        );
-	        return ResponseEntity.badRequest().body(errorResponse);
-	    } catch (InvalidDataFimException ex) {
+
+	    } catch (IllegalArgumentException ex) {
 	        // Retorna 400 com uma mensagem de erro no corpo
 	        ValidationError validationError = new ValidationError(
 	            LocalDateTime.now(), // Timestamp do erro
@@ -147,6 +121,27 @@ public class ReservationController {
 	        );
 	        validationError.addErros("dataFim", ex.getMessage());
 	        return ResponseEntity.badRequest().body(validationError);
+
+	    } catch (ReservationNotFoundException ex) {
+	        // Retorna 404 com uma mensagem de erro no corpo
+	        StandardErro errorResponse = new StandardErro(
+	            LocalDateTime.now(), // Timestamp do erro
+	            HttpStatus.NOT_FOUND.value(), // Código HTTP (404)
+	            ex.getMessage(), // Mensagem da exceção
+	            "/reservations/" + id // Caminho da requisição
+	        );
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+
+	    } catch (ReservationAlreadyFinalizedException ex) {
+	        // Retorna 400 com uma mensagem de erro no corpo
+	        StandardErro errorResponse = new StandardErro(
+	            LocalDateTime.now(), // Timestamp do erro
+	            HttpStatus.BAD_REQUEST.value(), // Código HTTP (400)
+	            ex.getMessage(), // Mensagem da exceção
+	            "/reservations/" + id // Caminho da requisição
+	        );
+	        return ResponseEntity.badRequest().body(errorResponse);
+
 	    } catch (Exception ex) {
 	        // Retorna 500 com uma mensagem de erro no corpo
 	        StandardErro errorResponse = new StandardErro(

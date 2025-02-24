@@ -35,7 +35,6 @@ public class ReservationService {
     @Autowired
     private CustomerRepository customerRepository;
 
-    // Criar nova reserva
     public Reservation create(Long parkingSpotId, Long customerId, LocalDateTime dataInicio) throws ParkingSpotNotAvailableException {
         // Validação dos parâmetros de entrada
         if (parkingSpotId == null) {
@@ -77,26 +76,32 @@ public class ReservationService {
         return reservationRepository.save(reservation);
     }
 
-    //Finalizar reserva
     public Reservation finalizarReserva(Long id, LocalDateTime dataFim) {
+        // Busca a reserva pelo ID
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException("Reserva não encontrada com o ID: " + id));
 
+        // Verifica se a reserva já foi finalizada
         if (reservation.getDataFim() != null) {
             throw new ReservationAlreadyFinalizedException("A reserva já foi finalizada.");
         }
 
         // Validação de dataFim
+        if (dataFim == null) {
+            throw new IllegalArgumentException("O campo 'dataFim' é obrigatório.");
+        }
         if (dataFim.isBefore(reservation.getDataInicio())) {
-            throw new InvalidDataFimException("A data de fim deve ser posterior à data de início.");
+            throw new IllegalArgumentException("A data de fim deve ser posterior à data de início.");
         }
 
+        // Atualiza a reserva
         reservation.setDataFim(dataFim);
         reservation.setValorTotal(calcularValorTotal(reservation));
 
         // Libera a vaga
         reservation.getParkingSpot().setStatus(VacancyStatus.DISPONIVEL);
 
+        // Salva a reserva atualizada
         return reservationRepository.save(reservation);
     }
     

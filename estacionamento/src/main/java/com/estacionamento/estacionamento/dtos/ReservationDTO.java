@@ -3,6 +3,8 @@ package com.estacionamento.estacionamento.dtos;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.estacionamento.estacionamento.models.Reservation;
+
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
@@ -22,6 +24,7 @@ public class ReservationDTO {
     @NotNull(message = "A data de início não pode ser nula.")
     private LocalDateTime dataInicio;
 
+    @NotNull(message = "A data de fim não pode ser nula.")
     private LocalDateTime dataFim;
 
     @Positive(message = "O valor total deve ser positivo.")
@@ -38,7 +41,10 @@ public class ReservationDTO {
         this.valorTotal = valorTotal;
     }
 
-    public ReservationDTO(com.estacionamento.estacionamento.models.Reservation reservation) {
+    public ReservationDTO(Reservation reservation) {
+        if (reservation == null) {
+            throw new IllegalArgumentException("A reserva não pode ser nula.");
+        }
         this.id = reservation.getId();
         this.parkingSpot = new ParkingSpotDTO(reservation.getParkingSpot());
         this.cliente = new CustomerDTO(reservation.getCliente());

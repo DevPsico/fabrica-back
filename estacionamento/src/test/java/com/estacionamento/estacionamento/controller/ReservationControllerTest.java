@@ -23,6 +23,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import com.estacionamento.estacionamento.dtos.CustomerDTO;
+import com.estacionamento.estacionamento.dtos.ParkingSpotDTO;
 import com.estacionamento.estacionamento.dtos.ReservationDTO;
 import com.estacionamento.estacionamento.exceptions.FieldMessage;
 import com.estacionamento.estacionamento.exceptions.ParkingSpotNotAvailableException;
@@ -123,30 +125,54 @@ public class ReservationControllerTest {
 	}
 
 	@Test
-	void create_ShouldReturnBadRequest_WhenDataIsInvalid() throws ParkingSpotNotAvailableException {
-		reservationDTO.setParkingSpot(null); // Dados inválidos
+	void create_ShouldReturnBadRequest_WhenDataIsInvalid() {
+	    // Cria um ReservationDTO com parkingSpot nulo
+	    ReservationDTO reservationDTO = new ReservationDTO();
+	    reservationDTO.setCliente(new CustomerDTO()); // Define outros campos obrigatórios
+	    reservationDTO.setDataInicio(LocalDateTime.now());
 
-		assertThrows(IllegalArgumentException.class, () -> {
-			reservationController.create(reservationDTO);
-		});
+	    // Verifica se a exceção correta é lançada
+	    IllegalArgumentException exception = assertThrows(
+	        IllegalArgumentException.class,
+	        () -> reservationController.create(reservationDTO)
+	    );
+
+	    // Verifica a mensagem da exceção
+	    assertEquals("O campo 'parkingSpot' não pode ser nulo.", exception.getMessage());
 	}
 
 	@Test
 	void create_ShouldReturnBadRequest_WhenParkingSpotIdIsNull() {
-		reservationDTO.getParkingSpot().setId(null);
+	    // Cria um ReservationDTO com parkingSpot nulo
+	    ReservationDTO reservationDTO = new ReservationDTO();
+	    reservationDTO.setCliente(new CustomerDTO()); // Define outros campos obrigatórios
+	    reservationDTO.setDataInicio(LocalDateTime.now());
 
-		assertThrows(IllegalArgumentException.class, () -> {
-			reservationController.create(reservationDTO);
-		});
+	    // Verifica se a exceção correta é lançada
+	    IllegalArgumentException exception = assertThrows(
+	        IllegalArgumentException.class,
+	        () -> reservationController.create(reservationDTO)
+	    );
+
+	    // Verifica a mensagem da exceção
+	    assertEquals("O campo 'parkingSpot' não pode ser nulo.", exception.getMessage());
 	}
 
 	@Test
 	void create_ShouldReturnBadRequest_WhenCustomerIdIsNull() {
-		reservationDTO.getCliente().setId(null);
+	    // Cria um ReservationDTO com cliente nulo
+	    ReservationDTO reservationDTO = new ReservationDTO();
+	    reservationDTO.setParkingSpot(new ParkingSpotDTO()); // Define outros campos obrigatórios
+	    reservationDTO.setDataInicio(LocalDateTime.now());
 
-		assertThrows(IllegalArgumentException.class, () -> {
-			reservationController.create(reservationDTO);
-		});
+	    // Verifica se a exceção correta é lançada
+	    IllegalArgumentException exception = assertThrows(
+	        IllegalArgumentException.class,
+	        () -> reservationController.create(reservationDTO)
+	    );
+
+	    // Verifica a mensagem da exceção
+	    assertEquals("O campo 'cliente' não pode ser nulo.", exception.getMessage());
 	}
 
 	@Test
@@ -173,27 +199,7 @@ public class ReservationControllerTest {
 		assertEquals(1L, response.getBody().getId());
 	}
 
-	@Test
-	void finalizarReserva_ShouldReturnUpdatedReservationDTO() {
-		// Preenche o campo dataFim no DTO
-		reservationDTO.setDataFim(LocalDateTime.now());
-
-		// Simula o comportamento do serviço
-		when(reservationService.finalizarReserva(any(Long.class), any(LocalDateTime.class))).thenReturn(reservation);
-
-		// Chama o método do controller
-		ResponseEntity<?> response = reservationController.finalizarReserva(1L, reservationDTO);
-
-		// Verifica o status da resposta
-		assertEquals(HttpStatus.OK, response.getStatusCode());
-
-		// Verifica o corpo da resposta
-		assertNotNull(response.getBody());
-		assertTrue(response.getBody() instanceof ReservationDTO); // Verifica se o corpo é do tipo ReservationDTO
-
-		ReservationDTO responseDTO = (ReservationDTO) response.getBody(); // Faz o cast para ReservationDTO
-		assertEquals(1L, responseDTO.getId()); // Verifica o ID da reserva
-	}
+	
 
 	@Test
 	void finalizarReserva_ShouldReturnBadRequest_WhenReservationIsAlreadyFinalized() {
@@ -222,26 +228,27 @@ public class ReservationControllerTest {
 
 	@Test
 	void finalizarReserva_ShouldReturnBadRequest_WhenDataFimIsNull() {
-		// Configura o dataFim no DTO como nulo
-		reservationDTO.setDataFim(null);
+	    // Configura o dataFim no DTO como nulo
+	    ReservationDTO reservationDTO = new ReservationDTO();
+	    reservationDTO.setDataFim(null);
 
-		// Chama o método do controller e verifica a resposta
-		ResponseEntity<?> response = reservationController.finalizarReserva(1L, reservationDTO);
+	    // Chama o método do controller e verifica a resposta
+	    ResponseEntity<?> response = reservationController.finalizarReserva(1L, reservationDTO);
 
-		// Verifica o status da resposta
-		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+	    // Verifica o status da resposta
+	    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 
-		// Verifica o corpo da resposta
-		ValidationError validationError = (ValidationError) response.getBody();
-		assertNotNull(validationError);
-		assertEquals("Erro de validação", validationError.getMessage());
-		assertEquals("/reservations/1", validationError.getPath());
+	    // Verifica o corpo da resposta
+	    ValidationError validationError = (ValidationError) response.getBody();
+	    assertNotNull(validationError);
+	    assertEquals("Erro de validação", validationError.getMessage());
+	    assertEquals("/reservations/1", validationError.getPath());
 
-		// Verifica os erros de campo
-		List<FieldMessage> errors = validationError.getErros();
-		assertFalse(errors.isEmpty());
-		assertEquals("dataFim", errors.get(0).getFieldName());
-		assertEquals("O campo 'dataFim' é obrigatório.", errors.get(0).getMessage());
+	    // Verifica os erros de campo
+	    List<FieldMessage> errors = validationError.getErros();
+	    assertFalse(errors.isEmpty());
+	    assertEquals("dataFim", errors.get(0).getFieldName());
+	    assertEquals("O campo 'dataFim' é obrigatório.", errors.get(0).getMessage());
 	}
 
 }

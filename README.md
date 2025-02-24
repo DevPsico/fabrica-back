@@ -59,9 +59,13 @@ Este projeto é um sistema de gerenciamento de estacionamento que permite gerenc
 
 
 src/
+
 ├── main/
+
 │   ├── java/
+
 │   │   ├── com/
+
 │   │   │   ├── estacionamento/
 │   │   │   │   ├── estacionamento/
 │   │   │   │   │   ├── controllers/

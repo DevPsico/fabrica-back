@@ -67,20 +67,35 @@ src/
 │   │   ├── com/
 
 │   │   │   ├── estacionamento/
+
 │   │   │   │   ├── estacionamento/
+
 │   │   │   │   │   ├── controllers/
+
 │   │   │   │   │   ├── services/
+
 │   │   │   │   │   ├── models/
+
 │   │   │   │   │   ├── repositories/
+
 │   ├── resources/
+
 │   │   ├── application.properties
+
 │   │   ├── logback.xml
+
 ├── test/
+
 │   ├── java/
+
 │   │   ├── com/
+
 │   │   │   ├── estacionamento/
+
 │   │   │   │   ├── estacionamento/
+
 │   │   │   │   │   ├── controllers/
+
 │   │   │   │   │   ├── services/
 
 
